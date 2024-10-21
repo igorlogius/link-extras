@@ -14,6 +14,69 @@ async function onStorageChange() {
   await browser.menus.removeAll();
 
   browser.menus.create({
+    title: "-- Open Tabs --",
+    contexts: ["link", "selection"],
+    onclick: async (info) => {
+        console.debug(info);
+      //-- handle text selection
+
+      let links = [];
+
+      if (info.selectionText) {
+        const ret = await browser.tabs.executeScript({
+          code: `selection = getSelection();
+                 [...document.links]
+                        .filter((anchor) => selection.containsNode(anchor, true))
+                        .map(link => link.href);`,
+        });
+
+        links = ret[0];
+      } else {
+        //-- handle link selection
+        links.push(info.linkUrl);
+      }
+
+      for (const link of links) {
+        browser.tabs.create({
+          url: link,
+          active: false,
+        });
+      }
+    },
+  });
+
+
+  browser.menus.create({
+    title: "-- Close Tabs --",
+    contexts: ["link", "selection"],
+    onclick: async (info) => {
+      //-- handle text selection
+
+      let links = [];
+
+      if (info.selectionText) {
+        const ret = await browser.tabs.executeScript({
+          code: `selection = getSelection();
+                 [...document.links]
+                        .filter((anchor) => selection.containsNode(anchor, true))
+                        .map(link => link.href);`,
+        });
+
+        links = ret[0];
+      } else {
+        //-- handle link selection
+        links.push(info.linkUrl);
+      }
+
+      const tabIdsToClose = (await browser.tabs.query({}))
+        .filter((t) => links.includes(t.url))
+        .map((t) => t.id);
+
+        browser.tabs.remove(tabIdsToClose);
+    },
+  });
+
+  browser.menus.create({
     title: "-- Download --",
     contexts: ["link", "selection"],
     onclick: async (info) => {
@@ -24,7 +87,7 @@ async function onStorageChange() {
       if (info.selectionText) {
         const ret = await browser.tabs.executeScript({
           code: `selection = getSelection();
-                 return [...document.links]
+                 [...document.links]
                         .filter((anchor) => selection.containsNode(anchor, true))
                         .map(link => link.href);`,
         });
@@ -200,6 +263,26 @@ async function onCommand(cmd) {
       });
     }
 
+    return;
+  }
+
+  if (cmd === "open") {
+    for (const link of links) {
+      browser.tabs.create({
+        url: link.url,
+        active: false,
+      });
+    }
+
+    return;
+  }
+
+  if (cmd === "close") {
+      const tabIdsToClose = (await browser.tabs.query({}))
+        .filter((t) => links.includes(t.url))
+        .map((t) => t.id);
+
+        browser.tabs.remove(tabIdsToClose);
     return;
   }
 
