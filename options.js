@@ -35,7 +35,7 @@ function onChange(evt) {
 
 [
   /* add individual settings here */
-  "seperator",
+  "separator",
 ].map((id) => {
   browser.storage.local
     .get(id)
@@ -102,10 +102,10 @@ function createTableRow(feed) {
 
   let button;
   if (feed.action === "add") {
-    button = createButton("Add", "addButton", function () {}, true);
+    button = createButton("➕", "addButton", function () {}, true);
   } else {
     button = createButton(
-      "Delete",
+      "🗑",
       "deleteButton",
       function () {
         deleteRow(tr);

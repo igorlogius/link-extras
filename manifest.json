@@ -4,7 +4,14 @@
   "background": {
     "scripts": ["background.js"]
   },
+
+  "browser_action": {
+    "default_area": "navbar"
+  },
   "commands": {
+    "download": {
+      "description": "Download hovered link or selection"
+    },
     "action_0": {
       "description": "1st action on hovered link or selection"
     },
@@ -41,7 +48,7 @@
     "980": "icon.png"
   },
   "manifest_version": 2,
-  "name": "Copy Link Extras",
+  "name": "Link Extras",
   "options_ui": {
     "page": "options.html"
   },
@@ -52,5 +59,5 @@
     "activeTab",
     "downloads"
   ],
-  "version": "1.2.9"
+  "version": "1.3.9"
 }

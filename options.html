@@ -6,8 +6,13 @@
   <form id="mainForm" accept-charset="utf-8">
     <fieldset>
       <p><b>Configure context elements:</b></p>
-      <span>Seperator:</span>
-      <input id="seperator" name="seperator" value="" placeholder="%nl" />
+      <span>Separator:</span>
+      <input
+        id="separator"
+        name="separator"
+        value=""
+        placeholder="%nl (default: linebreak)"
+      />
       <span>Table Actions:</span>
       <input id="impbtn_wrapper" type="button" name="impbtn" value="Import" />
       <input
@@ -23,20 +28,19 @@
     <fieldset>
       <table id="mainTable" border="1" style="width: 100%">
         <thead>
-          <th style="width: 30%">Name</th>
+          <th style="width: 30%">ID</th>
           <th style="width: 0">
             <abbr title="Copy as HTML fragment and not as plain text">
-              Html?
+              HTML?
             </abbr>
           </th>
           <th>
-            Format
             <abbr
-              title="%url, %url_proto, %url_host, %url_port, %url_path, %url_params, %url_origin, %text"
-              >(placeholders?)</abbr
+              title="Placeholders: %url, %url_proto, %url_host, %url_port, %url_path, %url_params, %url_origin, %text"
+              >Format</abbr
             >
           </th>
-          <th style="width: 0px">Action</th>
+          <th style="width: 0px"></th>
         </thead>
         <tbody id="mainTableBody" />
       </table>

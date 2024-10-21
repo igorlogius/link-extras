@@ -5,17 +5,16 @@ async function getFromStorage(type, id, fallback) {
   return typeof tmp[id] === type ? tmp[id] : fallback;
 }
 const nl = "\n";
+const br = "<br/>";
 
 async function onStorageChange() {
   let tmp = await getFromStorage("object", "selectors", []);
-  let seperator = await getFromStorage("string", "seperator", "");
-
-  //console.debug('seperator', "'" + seperator +"'");
+  let separator = await getFromStorage("string", "separator", "");
 
   await browser.menus.removeAll();
 
   browser.menus.create({
-    title: "Download",
+    title: "-- Download --",
     contexts: ["link", "selection"],
     onclick: async (info) => {
       //-- handle text selection
@@ -24,24 +23,15 @@ async function onStorageChange() {
 
       if (info.selectionText) {
         const ret = await browser.tabs.executeScript({
-          code: `
-          selection = getSelection();
-             [...document.links]
-          .filter((anchor) => selection.containsNode(anchor, true))
-        .map(link =>
-            link.href
-        );
-
-
-          `,
+          code: `selection = getSelection();
+                 return [...document.links]
+                        .filter((anchor) => selection.containsNode(anchor, true))
+                        .map(link => link.href);`,
         });
-
-        //console.debug('ret', ret[0]);
 
         links = ret[0];
       } else {
         //-- handle link selection
-
         links.push(info.linkUrl);
       }
 
@@ -52,6 +42,11 @@ async function onStorageChange() {
         });
       }
     },
+  });
+
+  browser.menus.create({
+    contexts: ["link", "selection"],
+    type: "separator",
   });
 
   for (const row of tmp) {
@@ -65,25 +60,17 @@ async function onStorageChange() {
 
         if (info.selectionText) {
           const ret = await browser.tabs.executeScript({
-            code: `
-          selection = getSelection();
-             [...document.links]
-          .filter((anchor) => selection.containsNode(anchor, true))
-        .map((link) => ({
-            text: link.innerText,
-            url: link.href,
-        }));
-
-
-          `,
+            code: `selection = getSelection();
+                    [...document.links]
+                    .filter((anchor) => selection.containsNode(anchor, true))
+                    .map((link) => ({
+                        text: link.innerText,
+                        url: link.href,
+                    }));`,
           });
-
-          //console.debug('ret', ret[0]);
-
           links = ret[0];
         } else {
           //-- handle link selection
-
           links.push({ text: info.linkText, url: info.linkUrl });
         }
 
@@ -111,35 +98,42 @@ async function onStorageChange() {
             tmp2 = tmp2.replaceAll("%" + k, v);
           }
 
-          tmp3 = tmp3 + tmp2 + (seperator === "" ? "\n" : seperator);
-          tmp4 = tmp4 + tmp2 + (seperator === "" ? "<br/>" : seperator);
-
-          //console.debug('tmp3', tmp3);
+          tmp3 = tmp3 + tmp2 + (separator === "" ? nl : separator);
         }
 
         tmp3 = tmp3.replaceAll("%nl", nl);
-        tmp4 = tmp4.replaceAll("%nl", "<br/>");
 
         if (row.html === true) {
-          let div = document.createElement("div");
-          div.style.position = "absolute";
-          div.style.bottom = "-9999999"; // move it offscreen
-          div.innerHTML = tmp4;
-          document.body.append(div);
-
-          div.focus();
-          document.getSelection().removeAllRanges();
-          var range = document.createRange();
-          range.selectNode(div);
-          document.getSelection().addRange(range);
-          document.execCommand("copy");
-          div.remove();
+          tmp4 += tmp3.replaceAll(nl, br) + "</span>";
+          navigator.clipboard.write([
+            new ClipboardItem({
+              "text/plain": new Blob([tmp3], {
+                type: "text/plain",
+              }),
+              "text/html": new Blob([tmp4], {
+                type: "text/html",
+              }),
+            }),
+          ]);
         } else {
           navigator.clipboard.writeText(tmp3);
         }
       },
     });
   }
+
+  browser.menus.create({
+    contexts: ["link", "selection"],
+    type: "separator",
+  });
+
+  browser.menus.create({
+    title: "-- Preferences --",
+    contexts: ["link", "selection"],
+    onclick: async (info) => {
+      browser.runtime.openOptionsPage();
+    },
+  });
 }
 
 async function setToStorage(id, value) {
@@ -175,13 +169,6 @@ browser.runtime.onInstalled.addListener(handleInstalled);
 browser.storage.onChanged.addListener(onStorageChange);
 
 async function onCommand(cmd) {
-  const anr = parseInt(cmd.split("_")[1]);
-
-  let tmp = await getFromStorage("object", "selectors", []);
-  let seperator = await getFromStorage("string", "seperator", "");
-
-  const row = tmp[anr];
-
   //-- handle text selection
 
   const ret = await browser.tabs.executeScript({
@@ -205,7 +192,23 @@ async function onCommand(cmd) {
 
   let links = ret[0];
 
-  //console.debug(links);
+  if (cmd === "download") {
+    for (const link of links) {
+      browser.downloads.download({
+        url: link.url,
+        saveAs: false,
+      });
+    }
+
+    return;
+  }
+
+  const anr = parseInt(cmd.split("_")[1]);
+
+  let tmp = await getFromStorage("object", "selectors", []);
+  let separator = await getFromStorage("string", "separator", "");
+
+  const row = tmp[anr];
 
   let tmp3 = "";
   let tmp4 = "";
@@ -230,33 +233,30 @@ async function onCommand(cmd) {
     for (const [k, v] of replacers) {
       tmp2 = tmp2.replaceAll("%" + k, v);
     }
-
-    tmp3 = tmp3 + tmp2 + (seperator === "" ? "\n" : seperator);
-    tmp4 = tmp4 + tmp2 + (seperator === "" ? "<br/>" : seperator);
-
-    //console.debug('tmp3', tmp3);
+    tmp3 = tmp3 + tmp2 + (separator === "" ? nl : separator);
   }
 
   tmp3 = tmp3.replaceAll("%nl", nl);
-  tmp4 = tmp4.replaceAll("%nl", "<br/>");
 
   if (row.html === true) {
-    let div = document.createElement("div");
-    div.style.position = "absolute";
-    div.style.bottom = "-9999999"; // move it offscreen
-    div.innerHTML = tmp4;
-    document.body.append(div);
-
-    div.focus();
-    document.getSelection().removeAllRanges();
-    var range = document.createRange();
-    range.selectNode(div);
-    document.getSelection().addRange(range);
-    document.execCommand("copy");
-    div.remove();
+    tmp4 += tmp3.replaceAll(nl, br) + "</span>";
+    navigator.clipboard.write([
+      new ClipboardItem({
+        "text/plain": new Blob([tmp3], {
+          type: "text/plain",
+        }),
+        "text/html": new Blob([tmp4], {
+          type: "text/html",
+        }),
+      }),
+    ]);
   } else {
     navigator.clipboard.writeText(tmp3);
   }
 }
 
 browser.commands.onCommand.addListener(onCommand);
+
+browser.browserAction.onClicked.addListener(() => {
+  browser.runtime.openOptionsPage();
+});
