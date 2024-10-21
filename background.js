@@ -14,6 +14,46 @@ async function onStorageChange() {
 
   await browser.menus.removeAll();
 
+  browser.menus.create({
+    title: "Download",
+    contexts: ["link", "selection"],
+    onclick: async (info) => {
+      //-- handle text selection
+
+      let links = [];
+
+      if (info.selectionText) {
+        const ret = await browser.tabs.executeScript({
+          code: `
+          selection = getSelection();
+             [...document.links]
+          .filter((anchor) => selection.containsNode(anchor, true))
+        .map(link =>
+            link.href
+        );
+
+
+          `,
+        });
+
+        //console.debug('ret', ret[0]);
+
+        links = ret[0];
+      } else {
+        //-- handle link selection
+
+        links.push(info.linkUrl);
+      }
+
+      for (const link of links) {
+        browser.downloads.download({
+          url: link,
+          saveAs: false,
+        });
+      }
+    },
+  });
+
   for (const row of tmp) {
     browser.menus.create({
       title: row.name,
