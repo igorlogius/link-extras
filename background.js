@@ -7,17 +7,21 @@ async function getFromStorage(type, id, fallback) {
 const nl = "\n";
 const br = "<br/>";
 
-async function onStorageChange() {
-  let tmp = await getFromStorage("object", "selectors", []);
-  let separator = await getFromStorage("string", "separator", "");
+let selectors = [];
+let seperator = nl;
 
-  await browser.menus.removeAll();
+async function onStorageChange() {
+  selectors = await getFromStorage("object", "selectors", selectors);
+  separator = await getFromStorage("string", "separator", seperator);
+}
+
+async function onMenuShow(/*info, tab*/) {
+  browser.menus.removeAll();
 
   browser.menus.create({
     title: "-- Open Tabs --",
     contexts: ["link", "selection"],
     onclick: async (info) => {
-        console.debug(info);
       //-- handle text selection
 
       let links = [];
@@ -45,7 +49,6 @@ async function onStorageChange() {
     },
   });
 
-
   browser.menus.create({
     title: "-- Close Tabs --",
     contexts: ["link", "selection"],
@@ -72,7 +75,7 @@ async function onStorageChange() {
         .filter((t) => links.includes(t.url))
         .map((t) => t.id);
 
-        browser.tabs.remove(tabIdsToClose);
+      browser.tabs.remove(tabIdsToClose);
     },
   });
 
@@ -112,7 +115,7 @@ async function onStorageChange() {
     type: "separator",
   });
 
-  for (const row of tmp) {
+  for (const row of selectors) {
     browser.menus.create({
       title: row.name,
       contexts: ["link", "selection"],
@@ -197,6 +200,8 @@ async function onStorageChange() {
       browser.runtime.openOptionsPage();
     },
   });
+
+  browser.menus.refresh();
 }
 
 async function setToStorage(id, value) {
@@ -207,7 +212,7 @@ async function setToStorage(id, value) {
 
 async function handleInstalled(details) {
   if (details.reason === "install") {
-    await setToStorage("selectors", [
+    selectors = [
       { html: false, name: "Text", format: "%text" },
       { html: false, name: "URL", format: "%url" },
       { html: false, name: "URL - Params", format: "%url_origin%url_params" },
@@ -219,17 +224,11 @@ async function handleInstalled(details) {
       },
       { html: false, name: "Markdown", format: "[%text](%url)" },
       { html: true, name: "HTML", format: '<a href="%url">%text</a>' },
-    ]);
+    ];
+    await setToStorage("selectors", selectors);
     browser.runtime.openOptionsPage();
   }
 }
-
-(async () => {
-  await onStorageChange();
-})();
-
-browser.runtime.onInstalled.addListener(handleInstalled);
-browser.storage.onChanged.addListener(onStorageChange);
 
 async function onCommand(cmd) {
   //-- handle text selection
@@ -278,20 +277,20 @@ async function onCommand(cmd) {
   }
 
   if (cmd === "close") {
-      const tabIdsToClose = (await browser.tabs.query({}))
-        .filter((t) => links.includes(t.url))
-        .map((t) => t.id);
+    const tabIdsToClose = (await browser.tabs.query({}))
+      .filter((t) => links.includes(t.url))
+      .map((t) => t.id);
 
-        browser.tabs.remove(tabIdsToClose);
+    browser.tabs.remove(tabIdsToClose);
     return;
   }
 
   const anr = parseInt(cmd.split("_")[1]);
 
-  let tmp = await getFromStorage("object", "selectors", []);
-  let separator = await getFromStorage("string", "separator", "");
+  //let tmp = await getFromStorage("object", "selectors", []);
+  //let separator = await getFromStorage("string", "separator", "");
 
-  const row = tmp[anr];
+  const row = selectors[anr];
 
   let tmp3 = "";
   let tmp4 = "";
@@ -343,3 +342,11 @@ browser.commands.onCommand.addListener(onCommand);
 browser.browserAction.onClicked.addListener(() => {
   browser.runtime.openOptionsPage();
 });
+
+browser.runtime.onInstalled.addListener(handleInstalled);
+
+browser.storage.onChanged.addListener(onStorageChange);
+
+browser.menus.onShown.addListener(onMenuShow);
+
+onStorageChange();
