@@ -1,5 +1,21 @@
 /* global browser */
 
+function getTimeStampStr() {
+  const d = new Date();
+  let ts = "";
+  [
+    d.getFullYear(),
+    d.getMonth() + 1,
+    d.getDate() + 1,
+    d.getHours(),
+    d.getMinutes(),
+    d.getSeconds(),
+  ].forEach((t, i) => {
+    ts = ts + (i !== 3 ? "-" : "_") + (t < 10 ? "0" : "") + t;
+  });
+  return ts.substring(1);
+}
+
 async function getFromStorage(type, id, fallback) {
   let tmp = await browser.storage.local.get(id);
   return typeof tmp[id] === type ? tmp[id] : fallback;
@@ -19,17 +35,56 @@ async function onMenuShow(/*info, tab*/) {
   browser.menus.removeAll();
 
   browser.menus.create({
+    id: "tabs_actions",
+    title: "Browser Actions",
+  });
+
+  browser.menus.create({
     id: "copy_actions",
     title: "Copy Actions",
   });
 
   browser.menus.create({
-    id: "tabs_actions",
-    title: "Window Actions",
+    title: "Bookmark Links",
+    contexts: ["link", "selection"],
+    parentId: "tabs_actions",
+    onclick: async (info) => {
+      //-- handle text selection
+
+      let links = [];
+
+      if (info.selectionText) {
+        const ret = await browser.tabs.executeScript({
+          code: `selection = getSelection();
+                 [...document.links]
+                        .filter((anchor) => selection.containsNode(anchor, true))
+                        .map(link => link.href);`,
+        });
+
+        links = ret[0];
+      } else {
+        //-- handle link selection
+        links.push(info.linkUrl);
+      }
+
+      // erzeuge einen Folder in Other Bookmarks
+
+      bmtn = await browser.bookmarks.create({
+        title: "Link Group " + getTimeStampStr(),
+      });
+
+      for (const link of links) {
+        browser.bookmarks.create({
+          title: link,
+          parentId: bmtn.id,
+          url: link,
+        });
+      }
+    },
   });
 
   browser.menus.create({
-    title: "Open in tabs",
+    title: "Open Links in Tabs",
     contexts: ["link", "selection"],
     parentId: "tabs_actions",
     onclick: async (info) => {
@@ -61,7 +116,7 @@ async function onMenuShow(/*info, tab*/) {
   });
 
   browser.menus.create({
-    title: "Open in unloaded tabs",
+    title: "Open Links in unloaded Tabs",
     contexts: ["link", "selection"],
     parentId: "tabs_actions",
     onclick: async (info) => {
@@ -94,7 +149,7 @@ async function onMenuShow(/*info, tab*/) {
   });
 
   browser.menus.create({
-    title: "Open in new window",
+    title: "Open Links in new Window",
     contexts: ["link", "selection"],
     parentId: "tabs_actions",
     onclick: async (info) => {
@@ -123,7 +178,7 @@ async function onMenuShow(/*info, tab*/) {
   });
 
   browser.menus.create({
-    title: "Select related tabs",
+    title: "Select related Tabs",
     contexts: ["link", "selection"],
     parentId: "tabs_actions",
     onclick: async (info) => {
@@ -154,7 +209,7 @@ async function onMenuShow(/*info, tab*/) {
   });
 
   browser.menus.create({
-    title: "Close related tabs",
+    title: "Close related Tabs",
     contexts: ["link", "selection"],
     parentId: "tabs_actions",
     onclick: async (info) => {
@@ -185,7 +240,7 @@ async function onMenuShow(/*info, tab*/) {
   });
 
   browser.menus.create({
-    title: "Download",
+    title: "Download Links",
     contexts: ["link", "selection"],
     onclick: async (info) => {
       //-- handle text selection
@@ -301,7 +356,7 @@ async function onMenuShow(/*info, tab*/) {
   });
 
   browser.menus.create({
-    title: "Customize",
+    title: "Configure",
     contexts: ["link", "selection"],
     parentId: "copy_actions",
     onclick: async (info) => {
@@ -399,6 +454,21 @@ async function onCommand(cmd) {
       .map((t) => t.index);
 
     browser.tabs.highlight({ tabs: tabIdxs });
+    return;
+  }
+
+  if (cmd === "bookmark") {
+    const bmtn = await browser.bookmarks.create({
+      title: "Link Group YYYY-MM-DD hh:mm",
+    });
+
+    for (const link of links) {
+      browser.bookmarks.create({
+        title: "bookmarks.create() on MDN",
+        parentId: bmtn.id,
+        url: link,
+      });
+    }
     return;
   }
 

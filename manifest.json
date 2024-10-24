@@ -17,6 +17,9 @@
     "select": {
       "description": "Select tabs which have urls that match the hovered link or links in selection"
     },
+    "bookmark": {
+      "description": "Bookmark hovered link or links in selection"
+    },
     "download": {
       "description": "Download hovered link or or links in the selection"
     },
@@ -61,6 +64,7 @@
     "page": "options.html"
   },
   "permissions": [
+    "bookmarks",
     "tabs",
     "storage",
     "menus",
@@ -68,5 +72,5 @@
     "activeTab",
     "downloads"
   ],
-  "version": "1.4.12"
+  "version": "1.4.13"
 }
