@@ -6,7 +6,7 @@ Add extra functions to links and links in selections  - Open Links in Tabs (load
 
 <b>Short Demo Video:</b>
 
-https://github.com/igorlogius/link-extras/assets/67047467/dc86233a-63e8-4463-97cf-0ab572cdbb8e
+https://github.com/user-attachments/assets/6aeb4fd0-940b-495f-a9ff-80f4edd3dd0a
 
 <b>Usage/Features</b>
 <ol>
