@@ -393,6 +393,15 @@ async function onCommand(cmd) {
     return;
   }
 
+  if (cmd === "select") {
+    const tabIdxs = (await browser.tabs.query({}))
+      .filter((t) => links.includes(t.url))
+      .map((t) => t.index);
+
+    browser.tabs.highlight({ tabs: tabIdxs });
+    return;
+  }
+
   const anr = parseInt(cmd.split("_")[1]);
 
   //let tmp = await getFromStorage("object", "selectors", []);

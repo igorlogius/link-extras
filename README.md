@@ -1,4 +1,4 @@
-Add extra custom copy and download option. Works with single or muliple links or selections.
+Add extra custom copy and download and window/tabs options. Works with single or muliple links in selections.
 
 [![](https://raw.githubusercontent.com/igorlogius/igorlogius/main/geFxAddon.png)](https://addons.mozilla.org/firefox/addon/link-extras/)
 
@@ -15,3 +15,5 @@ https://github.com/igorlogius/link-extras/assets/67047467/dc86233a-63e8-4463-97c
   <li>right click on a link or some previously selected text which contains links</li>
   <li>in the right click context menu use the context entry and select the function you want to use</li>
 </ol>
+
+

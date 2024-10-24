@@ -1,10 +1,9 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogis",
+  "homepage_url": "https://github.com/igorlogius/link-extras",
   "background": {
     "scripts": ["background.js"]
   },
-
   "browser_action": {
     "default_area": "navbar"
   },
@@ -12,42 +11,44 @@
     "open": {
       "description": "Open hovered link or selection in background tabs"
     },
-
     "close": {
-      "description": "Close tabs which have urls that match the hovered Link or selection"
+      "description": "Close tabs which have urls that match the hovered link or links in selection"
+    },
+    "select": {
+      "description": "Select tabs which have urls that match the hovered link or links in selection"
     },
     "download": {
-      "description": "Download hovered link or selection"
+      "description": "Download hovered link or or links in the selection"
     },
     "action_0": {
-      "description": "1st action on hovered link or selection"
+      "description": "1st copy action on hovered link or links in selection"
     },
     "action_1": {
-      "description": "2nd action on hovered link or selection"
+      "description": "2nd copy action on hovered link or links in selection"
     },
     "action_2": {
-      "description": "3rd action on hovered link or selection"
+      "description": "3rd copy action on hovered link or links in selection"
     },
     "action_3": {
-      "description": "4th action on hovered link or selection"
+      "description": "4th copy action on hovered link or links in selection"
     },
     "action_4": {
-      "description": "5th action on hovered link or selection"
+      "description": "5th copy action on hovered link or links in selection"
     },
     "action_5": {
-      "description": "6th action on hovered link or selection"
+      "description": "6th copy action on hovered link or links in selection"
     },
     "action_6": {
-      "description": "7th action on hovered link or selection"
+      "description": "7th copy action on hovered link or links in selection"
     },
     "action_7": {
-      "description": "8th action on hovered link or selection"
+      "description": "8th copy action on hovered link or links in selection"
     },
     "action_8": {
-      "description": "9th action on hovered link or selection"
+      "description": "9th copy action on hovered link or links in selection"
     },
     "action_9": {
-      "description": "10th action on hovered link or selection"
+      "description": "10th action on hovered link or links in selection"
     }
   },
   "description": "Add extra copy functions to links and selections. Works with single or muliple links or selections",
@@ -67,5 +68,5 @@
     "activeTab",
     "downloads"
   ],
-  "version": "1.4.11"
+  "version": "1.4.12"
 }
