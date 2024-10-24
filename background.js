@@ -459,14 +459,14 @@ async function onCommand(cmd) {
 
   if (cmd === "bookmark") {
     const bmtn = await browser.bookmarks.create({
-      title: "Link Group YYYY-MM-DD hh:mm",
+      title: "Link Group " + getTimeStampStr(),
     });
 
     for (const link of links) {
       browser.bookmarks.create({
-        title: "bookmarks.create() on MDN",
+        title: link.url,
         parentId: bmtn.id,
-        url: link,
+        url: link.url,
       });
     }
     return;

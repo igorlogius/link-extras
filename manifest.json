@@ -54,7 +54,7 @@
       "description": "10th action on hovered link or links in selection"
     }
   },
-  "description": "Add extra copy functions to links and selections. Works with single or muliple links or selections",
+  "description": "Add functions to links and links in selections - Open Links in Tabs (loaded or unloaded), Bookmark all Links, Download all Links and Copy Links to the Clipboard in a custom format",
   "icons": {
     "980": "icon.png"
   },
@@ -72,5 +72,5 @@
     "activeTab",
     "downloads"
   ],
-  "version": "1.4.13"
+  "version": "1.4.14"
 }
