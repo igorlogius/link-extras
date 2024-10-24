@@ -9,52 +9,55 @@
   },
   "commands": {
     "open": {
-      "description": "Open hovered link or selection in background tabs"
+      "description": "Open Links in Tabs"
+    },
+    "open_unloaded": {
+      "description": "Open Links in unloaded Tabs"
     },
     "close": {
-      "description": "Close tabs which have urls that match the hovered link or links in selection"
+      "description": "Close related Tabs"
     },
     "select": {
-      "description": "Select tabs which have urls that match the hovered link or links in selection"
+      "description": "Select related Tabs"
     },
     "bookmark": {
-      "description": "Bookmark hovered link or links in selection"
+      "description": "Bookmark Links"
     },
     "download": {
-      "description": "Download hovered link or or links in the selection"
+      "description": "Download Links"
     },
     "action_0": {
-      "description": "1st copy action on hovered link or links in selection"
+      "description": "1 Custom Copy Action"
     },
     "action_1": {
-      "description": "2nd copy action on hovered link or links in selection"
+      "description": "2 Custom Copy Action"
     },
     "action_2": {
-      "description": "3rd copy action on hovered link or links in selection"
+      "description": "3 Custom Copy Action"
     },
     "action_3": {
-      "description": "4th copy action on hovered link or links in selection"
+      "description": "4 Custom Copy Action"
     },
     "action_4": {
-      "description": "5th copy action on hovered link or links in selection"
+      "description": "5 Custom Copy Action"
     },
     "action_5": {
-      "description": "6th copy action on hovered link or links in selection"
+      "description": "6 Custom Copy Action"
     },
     "action_6": {
-      "description": "7th copy action on hovered link or links in selection"
+      "description": "7 Custom Copy Action"
     },
     "action_7": {
-      "description": "8th copy action on hovered link or links in selection"
+      "description": "8 Custom Copy Action"
     },
     "action_8": {
-      "description": "9th copy action on hovered link or links in selection"
+      "description": "9 Custom Copy Action"
     },
     "action_9": {
-      "description": "10th action on hovered link or links in selection"
+      "description": "10 Custom Copy Action"
     }
   },
-  "description": "Add functions to links and links in selections - Open Links in Tabs (loaded or unloaded), Bookmark all Links, Download all Links and Copy Links to the Clipboard in a custom format",
+  "description": "Add extra functions to links and links in selections - Open Links in Tabs (loaded or unloaded), Bookmark Links, Download Links and Copy Links to the Clipboard in Custom Formats",
   "icons": {
     "980": "icon.png"
   },
@@ -64,13 +67,14 @@
     "page": "options.html"
   },
   "permissions": [
-    "bookmarks",
-    "tabs",
-    "storage",
-    "menus",
-    "clipboardWrite",
     "activeTab",
-    "downloads"
+    "bookmarks",
+    "clipboardWrite",
+    "downloads",
+    "menus",
+    "notifications",
+    "storage",
+    "tabs"
   ],
-  "version": "1.4.14"
+  "version": "1.4.15"
 }

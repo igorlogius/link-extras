@@ -1,5 +1,27 @@
 /* global browser */
 
+const manifest = browser.runtime.getManifest();
+const extname = manifest.name;
+
+async function notify(
+  title,
+  message = "",
+  aux = { iconUrl: "icon.png", msToClose: 3500 },
+) {
+  const nid = await browser.notifications.create("" + Date.now(), {
+    type: "basic",
+    iconUrl: aux.iconUrl,
+    title,
+    message,
+  });
+
+  if (aux.msToClose > 0) {
+    setTimeout(() => {
+      browser.notifications.clear("" + nid);
+    }, aux.msToClose);
+  }
+}
+
 function getTimeStampStr() {
   const d = new Date();
   let ts = "";
@@ -80,6 +102,8 @@ async function onMenuShow(/*info, tab*/) {
           url: link,
         });
       }
+
+      notify(extname, "Created " + links.length + " Bookmarks");
     },
   });
 
@@ -112,6 +136,8 @@ async function onMenuShow(/*info, tab*/) {
           active: false,
         });
       }
+
+      notify(extname, "Created " + links.length + " Tabs");
     },
   });
 
@@ -145,6 +171,7 @@ async function onMenuShow(/*info, tab*/) {
           discarded: true,
         });
       }
+      notify(extname, "Created " + links.length + "unloaded Tabs");
     },
   });
 
@@ -174,6 +201,8 @@ async function onMenuShow(/*info, tab*/) {
       browser.windows.create({
         url: links,
       });
+
+      notify(extname, "Created new Window with " + links.length + " Tabs");
     },
   });
 
@@ -205,6 +234,8 @@ async function onMenuShow(/*info, tab*/) {
         .map((t) => t.index);
 
       browser.tabs.highlight({ tabs: tabIdxs });
+
+      notify(extname, "Selected " + tabIdxs.length + " related Tabs");
     },
   });
 
@@ -236,6 +267,8 @@ async function onMenuShow(/*info, tab*/) {
         .map((t) => t.id);
 
       browser.tabs.remove(tabIdsToClose);
+
+      notify(extname, "Closed " + tabIdsToClose.length + " related Tabs");
     },
   });
 
@@ -267,6 +300,8 @@ async function onMenuShow(/*info, tab*/) {
           saveAs: false,
         });
       }
+
+      notify(extname, "Downloaded " + links.length + " Links");
     },
   });
 
@@ -345,6 +380,8 @@ async function onMenuShow(/*info, tab*/) {
         } else {
           navigator.clipboard.writeText(tmp3);
         }
+
+        notify(extname, "Copied " + links.length + " Links (" + row.name + ")");
       },
     });
   }
@@ -425,6 +462,8 @@ async function onCommand(cmd) {
       });
     }
 
+    notify(extname, "Downloaded " + links.length + " Links");
+
     return;
   }
 
@@ -436,6 +475,20 @@ async function onCommand(cmd) {
       });
     }
 
+    notify(extname, "Opened " + links.length + " Tabs");
+    return;
+  }
+
+  if (cmd === "open_unloaded") {
+    for (const link of links) {
+      browser.tabs.create({
+        url: link.url,
+        discarded: true,
+        active: false,
+      });
+    }
+
+    notify(extname, "Opened " + links.length + " unloaded Tabs");
     return;
   }
 
@@ -445,6 +498,8 @@ async function onCommand(cmd) {
       .map((t) => t.id);
 
     browser.tabs.remove(tabIdsToClose);
+
+    notify(extname, "Closed " + tabIdsToClose.length + " related Tabs");
     return;
   }
 
@@ -454,6 +509,7 @@ async function onCommand(cmd) {
       .map((t) => t.index);
 
     browser.tabs.highlight({ tabs: tabIdxs });
+    notify(extname, "Selected " + tabIdxs.length + " related Tabs");
     return;
   }
 
@@ -469,6 +525,7 @@ async function onCommand(cmd) {
         url: link.url,
       });
     }
+    notify(extname, "Bookmarked " + links.length + " Links");
     return;
   }
 
@@ -522,6 +579,8 @@ async function onCommand(cmd) {
   } else {
     navigator.clipboard.writeText(tmp3);
   }
+
+  notify(extname, "Copied " + links.length + " Links (" + row.name + ")");
 }
 
 browser.commands.onCommand.addListener(onCommand);
