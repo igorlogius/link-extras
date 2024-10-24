@@ -19,8 +19,19 @@ async function onMenuShow(/*info, tab*/) {
   browser.menus.removeAll();
 
   browser.menus.create({
-    title: "-- Open Tabs --",
+    id: "copy_actions",
+    title: "Copy Actions",
+  });
+
+  browser.menus.create({
+    id: "tabs_actions",
+    title: "Window Actions",
+  });
+
+  browser.menus.create({
+    title: "Open in tabs",
     contexts: ["link", "selection"],
+    parentId: "tabs_actions",
     onclick: async (info) => {
       //-- handle text selection
 
@@ -50,8 +61,102 @@ async function onMenuShow(/*info, tab*/) {
   });
 
   browser.menus.create({
-    title: "-- Close Tabs --",
+    title: "Open in unloaded tabs",
     contexts: ["link", "selection"],
+    parentId: "tabs_actions",
+    onclick: async (info) => {
+      //-- handle text selection
+
+      let links = [];
+
+      if (info.selectionText) {
+        const ret = await browser.tabs.executeScript({
+          code: `selection = getSelection();
+                 [...document.links]
+                        .filter((anchor) => selection.containsNode(anchor, true))
+                        .map(link => link.href);`,
+        });
+
+        links = ret[0];
+      } else {
+        //-- handle link selection
+        links.push(info.linkUrl);
+      }
+
+      for (const link of links) {
+        browser.tabs.create({
+          url: link,
+          active: false,
+          discarded: true,
+        });
+      }
+    },
+  });
+
+  browser.menus.create({
+    title: "Open in new window",
+    contexts: ["link", "selection"],
+    parentId: "tabs_actions",
+    onclick: async (info) => {
+      //-- handle text selection
+
+      let links = [];
+
+      if (info.selectionText) {
+        const ret = await browser.tabs.executeScript({
+          code: `selection = getSelection();
+                 [...document.links]
+                        .filter((anchor) => selection.containsNode(anchor, true))
+                        .map(link => link.href);`,
+        });
+
+        links = ret[0];
+      } else {
+        //-- handle link selection
+        links.push(info.linkUrl);
+      }
+
+      browser.windows.create({
+        url: links,
+      });
+    },
+  });
+
+  browser.menus.create({
+    title: "Select related tabs",
+    contexts: ["link", "selection"],
+    parentId: "tabs_actions",
+    onclick: async (info) => {
+      //-- handle text selection
+
+      let links = [];
+
+      if (info.selectionText) {
+        const ret = await browser.tabs.executeScript({
+          code: `selection = getSelection();
+                 [...document.links]
+                        .filter((anchor) => selection.containsNode(anchor, true))
+                        .map(link => link.href);`,
+        });
+
+        links = ret[0];
+      } else {
+        //-- handle link selection
+        links.push(info.linkUrl);
+      }
+
+      const tabIdxs = (await browser.tabs.query({}))
+        .filter((t) => links.includes(t.url))
+        .map((t) => t.index);
+
+      browser.tabs.highlight({ tabs: tabIdxs });
+    },
+  });
+
+  browser.menus.create({
+    title: "Close related tabs",
+    contexts: ["link", "selection"],
+    parentId: "tabs_actions",
     onclick: async (info) => {
       //-- handle text selection
 
@@ -80,7 +185,7 @@ async function onMenuShow(/*info, tab*/) {
   });
 
   browser.menus.create({
-    title: "-- Download --",
+    title: "Download",
     contexts: ["link", "selection"],
     onclick: async (info) => {
       //-- handle text selection
@@ -119,6 +224,7 @@ async function onMenuShow(/*info, tab*/) {
     browser.menus.create({
       title: row.name,
       contexts: ["link", "selection"],
+      parentId: "copy_actions",
       onclick: async (info) => {
         //-- handle text selection
 
@@ -190,12 +296,14 @@ async function onMenuShow(/*info, tab*/) {
 
   browser.menus.create({
     contexts: ["link", "selection"],
+    parentId: "copy_actions",
     type: "separator",
   });
 
   browser.menus.create({
-    title: "-- Preferences --",
+    title: "Customize",
     contexts: ["link", "selection"],
+    parentId: "copy_actions",
     onclick: async (info) => {
       browser.runtime.openOptionsPage();
     },
