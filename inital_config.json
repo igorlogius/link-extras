@@ -1,0 +1,32 @@
+[
+  {
+    "html": false,
+    "name": "URL",
+    "format": "- %url"
+  },
+  {
+    "html": false,
+    "name": "URL w/o params",
+    "format": "- %url_origin%url_path"
+  },
+  {
+    "html": true,
+    "name": "HTML",
+    "format": "<a href=\"%url\">- %text</a>"
+  },
+  {
+    "html": true,
+    "name": "HTML w/o params",
+    "format": "<a href=\"%url_origin%url_path\">- %text</a>"
+  },
+  {
+    "html": false,
+    "name": "Markdown",
+    "format": "- [%text](%url)"
+  },
+  {
+    "html": false,
+    "name": "Markdown w/o params",
+    "format": "- [%text](%url_origin%url_path)"
+  }
+]

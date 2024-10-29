@@ -412,19 +412,8 @@ async function setToStorage(id, value) {
 
 async function handleInstalled(details) {
   if (details.reason === "install") {
-    selectors = [
-      { html: false, name: "Text", format: "%text" },
-      { html: false, name: "URL", format: "%url" },
-      { html: false, name: "URL - Params", format: "%url_origin%url_params" },
-      { html: false, name: "Text + URL", format: "%text + %url" },
-      {
-        html: false,
-        name: "Text + URL - Params",
-        format: "%text + %url_origin%url_params",
-      },
-      { html: false, name: "Markdown", format: "[%text](%url)" },
-      { html: true, name: "HTML", format: '<a href="%url">%text</a>' },
-    ];
+    let tmp = await fetch("inital_config.json");
+    selectors = await tmp.json();
     await setToStorage("selectors", selectors);
     browser.runtime.openOptionsPage();
   }
