@@ -59,11 +59,13 @@ async function onMenuShow(/*info, tab*/) {
   browser.menus.create({
     id: "tabs_actions",
     title: "Browser Actions",
+    contexts: ["link", "selection"],
   });
 
   browser.menus.create({
     id: "copy_actions",
     title: "Copy Actions",
+    contexts: ["link", "selection"],
   });
 
   browser.menus.create({
