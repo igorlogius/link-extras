@@ -2,7 +2,7 @@
 <head>
   <meta charset="utf-8" />
 </head>
-<body style="background: lightgray">
+<body style="background: lightgray; padding: 5px">
   <form id="mainForm" accept-charset="utf-8">
     <fieldset>
       <p><b>Configure context elements:</b></p>
@@ -44,6 +44,14 @@
         </thead>
         <tbody id="mainTableBody" />
       </table>
+    </fieldset>
+    <fieldset>
+      <span>Hide Browser Actions</span>
+      <input id="hide_browser_actions" value="" type="checkbox" />
+    </fieldset>
+    <fieldset>
+      <span>Hide Download Actions</span>
+      <input id="hide_download_actions" value="" type="checkbox" />
     </fieldset>
   </form>
   <script src="options.js"></script>

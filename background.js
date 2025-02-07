@@ -46,21 +46,27 @@ const nl = "\n";
 const br = "<br/>";
 
 let selectors = [];
-let seperator = nl;
+let separator = nl;
+let hide_browser_actions = false;
+let hide_download_actions = false;
 
 async function onStorageChange() {
   selectors = await getFromStorage("object", "selectors", selectors);
-  separator = await getFromStorage("string", "separator", seperator);
+  separator = await getFromStorage("string", "separator", separator);
+  hide_browser_actions = await getFromStorage(
+    "boolean",
+    "hide_browser_actions",
+    hide_browser_actions,
+  );
+  hide_download_actions = await getFromStorage(
+    "boolean",
+    "hide_download_actions",
+    hide_download_actions,
+  );
 }
 
 async function onMenuShow(/*info, tab*/) {
   browser.menus.removeAll();
-
-  browser.menus.create({
-    id: "tabs_actions",
-    title: "Browser Actions",
-    contexts: ["link", "selection"],
-  });
 
   browser.menus.create({
     id: "copy_actions",
@@ -68,249 +74,262 @@ async function onMenuShow(/*info, tab*/) {
     contexts: ["link", "selection"],
   });
 
-  browser.menus.create({
-    title: "Bookmark Links",
-    contexts: ["link", "selection"],
-    parentId: "tabs_actions",
-    onclick: async (info) => {
-      //-- handle text selection
+  if (!hide_browser_actions) {
+    browser.menus.create({
+      id: "tabs_actions",
+      title: "Browser Actions",
+      contexts: ["link", "selection"],
+    });
 
-      let links = [];
+    browser.menus.create({
+      title: "Bookmark Links",
+      contexts: ["link", "selection"],
+      parentId:
+        hide_browser_actions && hide_download_actions
+          ? undefined
+          : "tabs_actions",
+      onclick: async (info) => {
+        //-- handle text selection
 
-      if (info.selectionText) {
-        const ret = await browser.tabs.executeScript({
-          code: `selection = getSelection();
+        let links = [];
+
+        if (info.selectionText) {
+          const ret = await browser.tabs.executeScript({
+            code: `selection = getSelection();
                  [...document.links]
                         .filter((anchor) => selection.containsNode(anchor, true))
                         .map(link => link.href);`,
+          });
+
+          links = ret[0];
+        } else {
+          //-- handle link selection
+          links.push(info.linkUrl);
+        }
+
+        // erzeuge einen Folder in Other Bookmarks
+
+        bmtn = await browser.bookmarks.create({
+          title: "Link Group " + getTimeStampStr(),
         });
 
-        links = ret[0];
-      } else {
-        //-- handle link selection
-        links.push(info.linkUrl);
-      }
+        for (const link of links) {
+          browser.bookmarks.create({
+            title: link,
+            parentId: bmtn.id,
+            url: link,
+          });
+        }
 
-      // erzeuge einen Folder in Other Bookmarks
+        notify(extname, "Created " + links.length + " Bookmarks");
+      },
+    });
 
-      bmtn = await browser.bookmarks.create({
-        title: "Link Group " + getTimeStampStr(),
-      });
+    browser.menus.create({
+      title: "Open Links in Tabs",
+      contexts: ["link", "selection"],
+      parentId: "tabs_actions",
+      onclick: async (info) => {
+        //-- handle text selection
 
-      for (const link of links) {
-        browser.bookmarks.create({
-          title: link,
-          parentId: bmtn.id,
-          url: link,
-        });
-      }
+        let links = [];
 
-      notify(extname, "Created " + links.length + " Bookmarks");
-    },
-  });
-
-  browser.menus.create({
-    title: "Open Links in Tabs",
-    contexts: ["link", "selection"],
-    parentId: "tabs_actions",
-    onclick: async (info) => {
-      //-- handle text selection
-
-      let links = [];
-
-      if (info.selectionText) {
-        const ret = await browser.tabs.executeScript({
-          code: `selection = getSelection();
+        if (info.selectionText) {
+          const ret = await browser.tabs.executeScript({
+            code: `selection = getSelection();
                  [...document.links]
                         .filter((anchor) => selection.containsNode(anchor, true))
                         .map(link => link.href);`,
-        });
+          });
 
-        links = ret[0];
-      } else {
-        //-- handle link selection
-        links.push(info.linkUrl);
-      }
+          links = ret[0];
+        } else {
+          //-- handle link selection
+          links.push(info.linkUrl);
+        }
 
-      for (const link of links) {
-        browser.tabs.create({
-          url: link,
-          active: false,
-        });
-      }
+        for (const link of links) {
+          browser.tabs.create({
+            url: link,
+            active: false,
+          });
+        }
 
-      notify(extname, "Created " + links.length + " Tabs");
-    },
-  });
+        notify(extname, "Created " + links.length + " Tabs");
+      },
+    });
 
-  browser.menus.create({
-    title: "Open Links in unloaded Tabs",
-    contexts: ["link", "selection"],
-    parentId: "tabs_actions",
-    onclick: async (info) => {
-      //-- handle text selection
+    browser.menus.create({
+      title: "Open Links in unloaded Tabs",
+      contexts: ["link", "selection"],
+      parentId: "tabs_actions",
+      onclick: async (info) => {
+        //-- handle text selection
 
-      let links = [];
+        let links = [];
 
-      if (info.selectionText) {
-        const ret = await browser.tabs.executeScript({
-          code: `selection = getSelection();
+        if (info.selectionText) {
+          const ret = await browser.tabs.executeScript({
+            code: `selection = getSelection();
                  [...document.links]
                         .filter((anchor) => selection.containsNode(anchor, true))
                         .map(link => link.href);`,
-        });
+          });
 
-        links = ret[0];
-      } else {
-        //-- handle link selection
-        links.push(info.linkUrl);
-      }
+          links = ret[0];
+        } else {
+          //-- handle link selection
+          links.push(info.linkUrl);
+        }
 
-      for (const link of links) {
-        browser.tabs.create({
-          url: link,
-          active: false,
-          discarded: true,
-        });
-      }
-      notify(extname, "Created " + links.length + "unloaded Tabs");
-    },
-  });
+        for (const link of links) {
+          browser.tabs.create({
+            url: link,
+            active: false,
+            discarded: true,
+          });
+        }
+        notify(extname, "Created " + links.length + "unloaded Tabs");
+      },
+    });
 
-  browser.menus.create({
-    title: "Open Links in new Window",
-    contexts: ["link", "selection"],
-    parentId: "tabs_actions",
-    onclick: async (info) => {
-      //-- handle text selection
+    browser.menus.create({
+      title: "Open Links in new Window",
+      contexts: ["link", "selection"],
+      parentId: "tabs_actions",
+      onclick: async (info) => {
+        //-- handle text selection
 
-      let links = [];
+        let links = [];
 
-      if (info.selectionText) {
-        const ret = await browser.tabs.executeScript({
-          code: `selection = getSelection();
+        if (info.selectionText) {
+          const ret = await browser.tabs.executeScript({
+            code: `selection = getSelection();
                  [...document.links]
                         .filter((anchor) => selection.containsNode(anchor, true))
                         .map(link => link.href);`,
+          });
+
+          links = ret[0];
+        } else {
+          //-- handle link selection
+          links.push(info.linkUrl);
+        }
+
+        browser.windows.create({
+          url: links,
         });
 
-        links = ret[0];
-      } else {
-        //-- handle link selection
-        links.push(info.linkUrl);
-      }
+        notify(extname, "Created new Window with " + links.length + " Tabs");
+      },
+    });
 
-      browser.windows.create({
-        url: links,
-      });
+    browser.menus.create({
+      title: "Select related Tabs",
+      contexts: ["link", "selection"],
+      parentId: "tabs_actions",
+      onclick: async (info) => {
+        //-- handle text selection
 
-      notify(extname, "Created new Window with " + links.length + " Tabs");
-    },
-  });
+        let links = [];
 
-  browser.menus.create({
-    title: "Select related Tabs",
-    contexts: ["link", "selection"],
-    parentId: "tabs_actions",
-    onclick: async (info) => {
-      //-- handle text selection
-
-      let links = [];
-
-      if (info.selectionText) {
-        const ret = await browser.tabs.executeScript({
-          code: `selection = getSelection();
+        if (info.selectionText) {
+          const ret = await browser.tabs.executeScript({
+            code: `selection = getSelection();
                  [...document.links]
                         .filter((anchor) => selection.containsNode(anchor, true))
                         .map(link => link.href);`,
-        });
+          });
 
-        links = ret[0];
-      } else {
-        //-- handle link selection
-        links.push(info.linkUrl);
-      }
+          links = ret[0];
+        } else {
+          //-- handle link selection
+          links.push(info.linkUrl);
+        }
 
-      const tabIdxs = (await browser.tabs.query({}))
-        .filter((t) => links.includes(t.url))
-        .map((t) => t.index);
+        const tabIdxs = (await browser.tabs.query({}))
+          .filter((t) => links.includes(t.url))
+          .map((t) => t.index);
 
-      browser.tabs.highlight({ tabs: tabIdxs });
+        browser.tabs.highlight({ tabs: tabIdxs });
 
-      notify(extname, "Selected " + tabIdxs.length + " related Tabs");
-    },
-  });
+        notify(extname, "Selected " + tabIdxs.length + " related Tabs");
+      },
+    });
 
-  browser.menus.create({
-    title: "Close related Tabs",
-    contexts: ["link", "selection"],
-    parentId: "tabs_actions",
-    onclick: async (info) => {
-      //-- handle text selection
+    browser.menus.create({
+      title: "Close related Tabs",
+      contexts: ["link", "selection"],
+      parentId: "tabs_actions",
+      onclick: async (info) => {
+        //-- handle text selection
 
-      let links = [];
+        let links = [];
 
-      if (info.selectionText) {
-        const ret = await browser.tabs.executeScript({
-          code: `selection = getSelection();
+        if (info.selectionText) {
+          const ret = await browser.tabs.executeScript({
+            code: `selection = getSelection();
                  [...document.links]
                         .filter((anchor) => selection.containsNode(anchor, true))
                         .map(link => link.href);`,
-        });
+          });
 
-        links = ret[0];
-      } else {
-        //-- handle link selection
-        links.push(info.linkUrl);
-      }
+          links = ret[0];
+        } else {
+          //-- handle link selection
+          links.push(info.linkUrl);
+        }
 
-      const tabIdsToClose = (await browser.tabs.query({}))
-        .filter((t) => links.includes(t.url))
-        .map((t) => t.id);
+        const tabIdsToClose = (await browser.tabs.query({}))
+          .filter((t) => links.includes(t.url))
+          .map((t) => t.id);
 
-      browser.tabs.remove(tabIdsToClose);
+        browser.tabs.remove(tabIdsToClose);
 
-      notify(extname, "Closed " + tabIdsToClose.length + " related Tabs");
-    },
-  });
+        notify(extname, "Closed " + tabIdsToClose.length + " related Tabs");
+      },
+    });
+  }
 
-  browser.menus.create({
-    title: "Download Links",
-    contexts: ["link", "selection"],
-    onclick: async (info) => {
-      //-- handle text selection
+  if (!hide_download_actions) {
+    browser.menus.create({
+      title: "Download Links",
+      contexts: ["link", "selection"],
+      onclick: async (info) => {
+        //-- handle text selection
 
-      let links = [];
+        let links = [];
 
-      if (info.selectionText) {
-        const ret = await browser.tabs.executeScript({
-          code: `selection = getSelection();
+        if (info.selectionText) {
+          const ret = await browser.tabs.executeScript({
+            code: `selection = getSelection();
                  [...document.links]
                         .filter((anchor) => selection.containsNode(anchor, true))
                         .map(link => link.href);`,
-        });
+          });
 
-        links = ret[0];
-      } else {
-        //-- handle link selection
-        links.push(info.linkUrl);
-      }
+          links = ret[0];
+        } else {
+          //-- handle link selection
+          links.push(info.linkUrl);
+        }
 
-      for (const link of links) {
-        browser.downloads.download({
-          url: link,
-          saveAs: false,
-        });
-      }
+        for (const link of links) {
+          browser.downloads.download({
+            url: link,
+            saveAs: false,
+          });
+        }
 
-      notify(extname, "Downloaded " + links.length + " Links");
-    },
-  });
+        notify(extname, "Downloaded " + links.length + " Links");
+      },
+    });
 
-  browser.menus.create({
-    contexts: ["link", "selection"],
-    type: "separator",
-  });
+    browser.menus.create({
+      contexts: ["link", "selection"],
+      type: "separator",
+    });
+  }
 
   for (const row of selectors) {
     browser.menus.create({

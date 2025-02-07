@@ -36,6 +36,8 @@ function onChange(evt) {
 [
   /* add individual settings here */
   "separator",
+  "hide_browser_actions",
+  "hide_download_actions",
 ].map((id) => {
   browser.storage.local
     .get(id)
