@@ -3,6 +3,8 @@
 const manifest = browser.runtime.getManifest();
 const extname = manifest.name;
 
+let bookmarkTargetFolderId;
+
 async function notify(
   title,
   message = "",
@@ -82,7 +84,25 @@ async function onMenuShow(/*info, tab*/) {
     });
 
     browser.menus.create({
-      title: "Bookmark Links",
+      title: "Set bookmark folder",
+      contexts: ["bookmark"],
+      onclick: async (info) => {
+        if (info.bookmarkId) {
+          const [bm] = await browser.bookmarks.get(info.bookmarkId);
+
+          console.debug(bm);
+          if (bm.type === "folder") {
+            bookmarkTargetFolderId = info.bookmarkId;
+            notify(extname, "Set " + bm.title + " as bookmark target folder");
+            return;
+          }
+        }
+        notify(extname, "Err: bookmark target folder not set");
+      },
+    });
+
+    browser.menus.create({
+      title: "Bookmark Links (no folder)",
       contexts: ["link", "selection"],
       parentId:
         hide_browser_actions && hide_download_actions
@@ -107,21 +127,76 @@ async function onMenuShow(/*info, tab*/) {
           links.push(info.linkUrl);
         }
 
-        // erzeuge einen Folder in Other Bookmarks
+        if (typeof bookmarkTargetFolderId === "string") {
+          // erzeuge einen Folder in Other Bookmarks
 
-        bmtn = await browser.bookmarks.create({
+          /*bmtn = await browser.bookmarks.create({
           title: "Link Group " + getTimeStampStr(),
         });
+        */
 
-        for (const link of links) {
-          browser.bookmarks.create({
-            title: link,
-            parentId: bmtn.id,
-            url: link,
+          for (const link of links) {
+            browser.bookmarks.create({
+              title: link,
+              //parentId: bmtn.id,
+              parentId: bookmarkTargetFolderId,
+              url: link,
+            });
+          }
+
+          notify(extname, "Created " + links.length + " Bookmarks");
+        } else {
+          notify(extname, "Error: no bookmark folder set");
+        }
+      },
+    });
+
+    browser.menus.create({
+      title: "Bookmark Links (+folder)",
+      contexts: ["link", "selection"],
+      parentId:
+        hide_browser_actions && hide_download_actions
+          ? undefined
+          : "tabs_actions",
+      onclick: async (info) => {
+        //-- handle text selection
+
+        let links = [];
+
+        if (info.selectionText) {
+          const ret = await browser.tabs.executeScript({
+            code: `selection = getSelection();
+                 [...document.links]
+                        .filter((anchor) => selection.containsNode(anchor, true))
+                        .map(link => link.href);`,
           });
+
+          links = ret[0];
+        } else {
+          //-- handle link selection
+          links.push(info.linkUrl);
         }
 
-        notify(extname, "Created " + links.length + " Bookmarks");
+        if (typeof bookmarkTargetFolderId === "string") {
+          // erzeuge einen Folder in Other Bookmarks
+
+          bmtn = await browser.bookmarks.create({
+            title: "Link Group " + getTimeStampStr(),
+            parentId: bookmarkTargetFolderId,
+          });
+
+          for (const link of links) {
+            browser.bookmarks.create({
+              title: link,
+              parentId: bmtn.id,
+              url: link,
+            });
+          }
+
+          notify(extname, "Created " + links.length + " Bookmarks");
+        } else {
+          notify(extname, "Error: no bookmark folder set");
+        }
       },
     });
 
