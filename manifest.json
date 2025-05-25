@@ -64,6 +64,7 @@
   "manifest_version": 2,
   "name": "Link Extras",
   "options_ui": {
+    "open_in_tab": true,
     "page": "options.html"
   },
   "permissions": [
@@ -76,5 +77,5 @@
     "storage",
     "tabs"
   ],
-  "version": "1.4.19"
+  "version": "1.4.20"
 }
